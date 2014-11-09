@@ -27,10 +27,8 @@ total_table$team %>>% (gsub('\\*','',.)) -> total_table$team
 total_table %>>%
 	filter(!team == 'League Average') -> total_table
 
-c('team','opponent','misc') -> tables
-'misc' -> table_name
-2014 -> season_end
-date = T
+total_table %>>% write.csv('Desktop/2014_team_data.csv', row.names = F) #pick where you want to save it
+
 getBREFTeamStatTable <- function(season_end = 2015, table_name = 'team', date = T){
 	c('rvest','dplyr','pipeR') -> packages
 	lapply(packages, library, character.only = T)
