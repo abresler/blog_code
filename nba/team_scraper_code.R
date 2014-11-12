@@ -15,7 +15,7 @@ url %>>%
 	tbl_df() -> total_table
 
 total_table %>>%
-	filter(X.1 == 'Rk') %>>% as.character -> names
+	dplyr::dplyr::filter(X.1 == 'Rk') %>>% as.character -> names
 
 'Rk' %>>% grep(x = total_table$X.1) -> row_of_header #find where rank is
 names %>>% tolower -> names(total_table)
@@ -25,7 +25,7 @@ NULL -> total_table$rk
 total_table$team %>>% grepl(pattern = '\\*') -> total_table$playoff_team
 total_table$team %>>% (gsub('\\*','',.)) -> total_table$team
 total_table %>>%
-	filter(!team == 'League Average') -> total_table
+	dplyr::filter(!team == 'League Average') -> total_table
 
 total_table %>>% write.csv('Desktop/2014_team_data.csv', row.names = F) #pick where you want to save it
 
@@ -46,12 +46,12 @@ getBREFTeamStatTable <- function(season_end = 2015, table_name = 'team', date = 
 
 	if(df$X.1[1] == 'Rk'){
 		df %>>%
-			filter(X.1 == "Rk") %>>% as.character -> names
+			dplyr::filter(X.1 == "Rk") %>>% as.character -> names
 		'Rk' %>>% grep(x = df$X.1) -> row_of_header #find where rank is
 		(row_of_header + 1) %>>% (df[.:nrow(df),]) -> df #skip that row and go to the end
 		names %>>% tolower-> names(df)} else{
 		df %>>%
-			filter(X.1 == "Rk") %>>% as.character -> names
+			dplyr::filter(X.1 == "Rk") %>>% as.character -> names
 		'Rk' %>>% grep(x = df$X.1) -> row_of_header #find where rank is
 		(row_of_header + 1) %>>% (df[.:nrow(df),]) -> df #skip that row and go to the end
 		names %>>% tolower-> names(df)
