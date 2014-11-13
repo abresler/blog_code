@@ -1,5 +1,4 @@
 metricChart <- function(data, xlabel, ylabel, height = 400, width = 600, title){
-	options(viewer = NULL)
 	library(rCharts)
 	library(jsonlite)
 	library(pipeR)
