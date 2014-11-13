@@ -18,7 +18,7 @@ data.frame() %>>% tbl_df -> all_historic_years #create an empty dataframe
 #our FOR loop for every season end from 1950 to 2014
 for(s in season_ends){
 	getBREFTeamStatTable(season_end = s, date = T,table_name = 'team')-> table
-	year -> table$season_end #add a numeric year to make sorting easy
+	s -> table$season_end #add a numeric year to make sorting easy
 	all_historic_years %>>% rbind_list(table) -> all_historic_years
 	table %>>% rm
 }
@@ -33,8 +33,7 @@ getBREFTeamStatTable(table_name = 'team',season_end = 2015, date = T) -> data_20
 
 #Bind them Both Together
 all_historic_years %>>%
-	rbind_list(data_2015) -> all_nba_team_data
-all_nba_team_data %>>% head
+	rbind_list(data_2015) %>>% arrange(desc(season_end)) -> all_nba_team_data
 
 
 all_nba_team_data %>>% summary #summary of the variables
@@ -45,6 +44,8 @@ all_nba_team_data %>>%
 	filter(!is.na(g)) %>>%
 	mutate(points_total = g * pts.g,
 				 points_per_fga = points_total / fga) -> all_nba_team_data
+all_nba_team_data %>>%
+	select(team,season,points_total, points_per_fga) #make sure it worked
 
 #Best Ever
 all_nba_team_data %>>%
@@ -89,13 +90,13 @@ era3pt_shot %>>%
 					 	ticks = list(stroke = "black"),
 					 	majorTicks = list(strokeWidth = 2),
 					 	labels = list(
-					 		angle = 90,
-					 		fontSize = 12,
+					 		angle = 50,
+					 		fontSize = 11,
 					 		align = "left",
 					 		baseline = "middle",
 					 		dx = 3
 					 	))) %>>%
-	add_axis("y", title = "3PT Point Attempts per Minute",
+	add_axis("y", title = "3PT Point Attempts Per Minute",
 					 title_offset = 55, ticks = 20) %>>%
 	layer_points() %>>%
 	add_relative_scales() %>>%
@@ -109,6 +110,16 @@ era3pt_shot %>>%
 						 								size = 100)
 						 ))
 
+
+era3pt_shot %>>%
+	group_by(season_end) %>>%
+	summarise(total_3pt_attempts = sum(X3pa),
+						total_games = sum(g),
+						total_3pt_shots_per_game = total_3pt_attempts/total_games) %>%
+	select(season_end,total_3pt_shots_per_game) -> per_game
+
+per_game %>>%
+
 era3pt_shot %>>%
 	group_by(season_end) %>>%
 	filter(X3pa_per_min == max(X3pa_per_min)) %>>%
@@ -120,8 +131,8 @@ era3pt_shot %>>%
 data.frame(team = top_teams$team %>>% unique) %>>% tbl_df %>>%
 	arrange((team)) -> teams
 teams %>>% merge(active_colors,all.x = T) -> teams
-'#EE2944' -> teams[14,2]
-'#266A2E'-> teams[15,2]
+'#EE2944' -> teams[14,2] #Add Clippers Color
+'#266A2E'-> teams[15,2] #Add Sonics Color
 
 
 top_teams %>>%
@@ -132,7 +143,7 @@ top_teams %>>%
 					 	majorTicks = list(strokeWidth = 2),
 					 	labels = list(
 					 		angle = 50,
-					 		fontSize = 12,
+					 		fontSize = 11,
 					 		align = "left",
 					 		baseline = "middle",
 					 		dx = 3
@@ -149,4 +160,4 @@ top_teams %>>%
 						 	labels = list(fontSize = 10, dx = 10),
 						 	symbol = list(stroke = "black", strokeWidth = 1,
 						 								size = 100)
-						 ))
+						 	))
