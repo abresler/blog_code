@@ -70,10 +70,11 @@ era3pt_shot %>>%
 
 #Find a way to look apples to apples
 era3pt_shot %>>%
-	mutate(X3pa_per_min = X3pa/mp) -> era3pt_shot
+	mutate(X3pa_per_min = X3pa/mp,
+				 X3pa) -> era3pt_shot
 ##
 era3pt_shot %>>%
-	ggvis(x =~season_end, y =~X3pa_per_min, fill = ~factor(decade), fillOpacity := 0.45) %>>%
+	ggvis(x =~season_end, y =~X3pa_per_min*240, fill = ~factor(decade), fillOpacity := 0.45) %>>%
 	add_axis("x", title = "", values = seq(from = 1980,to =2015,1), format="####", title_offset = 50,
 					 properties = axis_props(
 					 	ticks = list(stroke = "black"),
@@ -85,8 +86,9 @@ era3pt_shot %>>%
 					 		baseline = "middle",
 					 		dx = 3
 					 	))) %>>%
-	add_axis("y", title = "3PT Point Attempts Per Minute",
+	add_axis("y", title = "3PT Point Attempts Per 240 Minutes",
 					 title_offset = 55, ticks = 20) %>>%
+	layer_smooths(span = 0.75, se = FALSE) %>>%
 	layer_points(shape=~factor(decade)) %>>%
 	group_by(decade) %>>%
 	layer_model_predictions(model = 'lm', stroke =~factor(decade), se  = T) %>>%
