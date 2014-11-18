@@ -1,5 +1,6 @@
 #REQUIRES RVEST - pipeR - dplyr - reshape2
 getGoogleResults <- function (search.term, show = 10){
+	Trim <- function (x) gsub("^\\s+|\\s+$", "", x)
 	packages = c('rvest','dplyr','pipeR','reshape2')
 	lapply(packages,library,character.only = T)
 	search.term -> st
