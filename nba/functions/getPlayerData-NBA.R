@@ -1,6 +1,6 @@
 c("jsonlite","dplyr",'reshape2','pipeR') -> packages
 lapply(packages,library,character.only = T)
-p -> player_id
+977-> player_id
 getNBAPlayerData <- function(player_id){
 	base = "http://stats.nba.com/stats/commonplayerinfo?LeagueID=00&PlayerID="
 	base %>>% paste0(player_id) -> url
@@ -9,10 +9,11 @@ getNBAPlayerData <- function(player_id){
 		fromJSON(simplifyDataFrame = T)
 		~df
 	})
+	df$resultSets$name -> tables
 	df$resultSets$headers %>>% length -> headers_length
 	df$resultSets$headers[1] %>>% unlist %>>% tolower -> header
 
-	c('player_id','player','weight_lbs') -> header[c(1,4,12)]
+	c('player_id','player','weight_lbs') -> header[header %in% c('person_id','display_first_last','weight')]
 	df$resultSets$rowSet[1] %>>% data.frame -> df_player_data
 	header -> names(df_player_data)
 	df_player_data$height %>>% colsplit("\\-",c('feet','inches')) %>>%
@@ -26,9 +27,9 @@ getNBAPlayerData <- function(player_id){
 					 bmi = (weight_lbs/height_inches^2) * 703
 		) -> df_player_data
 
-	if(headers_length > 1){
+	if(tables[tables %in% 'PlayerHeadlineStats'] == 'PlayerHeadlineStats'&df$resultSets$rowSet[2] %>>% data.frame %>>% nrow >0){
 		df$resultSets$headers[2] %>>% unlist %>>% tolower -> header
-		df$resultSets$rowSet[2] %>>% data.frame -> df_player_results
+		df$resultSets$rowSet[2] %>>% data.frame %>>% tbl_df -> df_player_results
 		'player' -> header[2]
 		header -> names(df_player_results)
 		apply(df_player_results[,names(df_player_results) %in% c('pts','ast','reb','all_star_appearances')],2,as.numeric) -> df_player_results[,names(df_player_results) %in% c('pts','ast','reb','all_star_appearances')]
@@ -39,4 +40,3 @@ getNBAPlayerData <- function(player_id){
 	"Player Info" -> df$table_name
 	return(df_player_data)
 }
-
