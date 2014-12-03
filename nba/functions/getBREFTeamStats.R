@@ -1,5 +1,5 @@
 getBREFTeamStatTable <- function(season_end = 2015, table_name = 'team', date = T){
-	c('rvest','dplyr','pipeR','RCurl') -> packages
+	c('rvest','dplyr','pipeR','RCurl', 'XML') -> packages
 	lapply(packages, library, character.only = T)
 	'http://www.basketball-reference.com/leagues/' -> base
 	(season_end-1) %>>% paste0("-",season_end) -> season
@@ -16,24 +16,42 @@ getBREFTeamStatTable <- function(season_end = 2015, table_name = 'team', date = 
 			html_table(fill = T)
 			~t
 		})
+		if(season_end >= 1971){
+			t[2] %>>% data.frame %>>% tbl_df -> df
+			c('team','wins','losses','win_pct','games_back','pts.g','opp_pts.g','srs') -> names(df)
+			'Eastern' -> df$conference
+			t[3] %>>% data.frame() %>>% tbl_df -> df2
+			c('team','wins','losses','win_pct','games_back','pts.g','opp_pts.g','srs') -> names(df2)
+			'Western' -> df2$conference
+			rbind_list(df,df2) -> df
+			df$team %>>% (grepl('\\*',.)) -> df$playoff_team
+			df$team %>>% (gsub('\\*','',.)) -> df$team
+			df$team %>>% (colsplit(.,'\\(',c('team','conference_rank'))) %>>%
+				(.$conference_rank) -> conference_rank
+			conference_rank %>>% (gsub('\\)','',.)) %>>% as.numeric -> df$conference_rank
+			df$team %>>% (colsplit(.,'\\(',c('team','conference_rank'))) %>>%
+				(.$team)  %>>% Trim -> df$team
+		} else{
 		t[2] %>>% data.frame %>>% tbl_df -> df
 		c('team','wins','losses','win_pct','games_back','pts.g','opp_pts.g','srs') -> names(df)
-		'Eastern' -> df$conference
-		t[3] %>>% data.frame() %>>% tbl_df -> df2
-		c('team','wins','losses','win_pct','games_back','pts.g','opp_pts.g','srs') -> names(df2)
-		'Western' -> df2$conference
-		rbind_list(df,df2) -> df
+		df$team %>>% (grep('Western Division',.)) %>>% as.numeric -> div
+		'' -> df$conference
+		'Eastern' -> df[1:div,'conference']
+		'Western' -> df[div:nrow(df),'conference']
+		if(grep('\\(',df$team) %>>% length > 0){
+			df$team %>>% (colsplit(.,'\\(',c('team','conference_rank'))) %>>%
+				(.$conference_rank) -> conference_rank
+			conference_rank %>>% (gsub('\\)','',.)) %>>% as.numeric -> df$conference_rank
+			df$team %>>% (colsplit(.,'\\(',c('team','conference_rank'))) %>>%
+				(.$team)  %>>% Trim -> df$team
+		}
 		df$team %>>% (grepl('\\*',.)) -> df$playoff_team
 		df$team %>>% (gsub('\\*','',.)) -> df$team
-		df$team %>>% (colsplit(.,'\\(',c('team','conference_rank'))) %>>%
-			(.$conference_rank) -> conference_rank
-		conference_rank %>>% (gsub('\\)','',.)) %>>% as.numeric -> df$conference_rank
+		}
 		df[df$games_back == '—','games_back'] <- 0
 		df$games_back %>>% as.numeric -> df$games_back
-		df$team %>>% (colsplit(.,'\\(',c('team','conference_rank'))) %>>%
-			(.$team)  %>>% Trim -> df$team
 		df %>>%
-			filter(!is.na(wins)) -> df
+			filter(team == 'Baltimore Bullets'|!is.na(wins)) -> df
 		df$pts.g - df$opp_pts.g -> df$point_differential
 		pipeline({
 			url
