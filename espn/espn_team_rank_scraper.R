@@ -25,4 +25,7 @@ for(u in urls){
 	all_df %>>% rbind_list(df) -> all_df
 }
 all_df %>>% rbind_list(data) -> all_df
-data %>>% write.csv('Desktop/webpage/abresler.github.io/data/espn/team_rankings.csv', row.names = F)
+all_df %>>%
+	arrange(desc(year)) -> all_df
+apply(all_df[,3:11],2, as.numeric) -> all_df[,3:11]
+all_df %>>% write.csv('Desktop/webpage/abresler.github.io/data/espn/team_rankings.csv', row.names = F)
