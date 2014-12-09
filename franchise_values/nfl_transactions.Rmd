@@ -1,0 +1,76 @@
+---
+title: ""
+runtime: shiny
+output:
+  html_document:
+    fig_height: 6
+    fig_width: 8
+---
+
+```{r, echo=FALSE,autodep=FALSE,warning=FALSE,tidy=FALSE,cache.comments=FALSE,cache=FALSE,results='hide',include=FALSE}
+library(ggvis)
+library(dplyr)
+active = tbl_df(read.csv('data/active_transactions.csv'))
+active = 
+	active %>% 
+	arrange(team)
+tc = unique(active[,c('team','hex_color')])
+```
+
+```{r, echo=FALSE,message=FALSE, warning=FALSE, fig.width = 11, fig.height = 5.5}
+all_values <- function(x) {
+	if(is.null(x)) return(NULL)
+	v = x$valuation
+	t = x$year
+	d = active[active$year == t&active$valuation == v,'detail']
+	return(d)
+}
+brushed_summary <- function(items, session, page_loc, ...) {
+	if (nrow(items) == 0) return()
+	
+	items$key__ <- NULL
+	lines <- Map(function(name, vals) {
+		paste0('Total Valuation (millions): ',
+					 	as.character(round(sum(as.numeric(vals)), 2))
+					 	,"<br />\n",
+					 'Transactions: ', round(length(as.numeric(vals)), 2)
+		)
+	}, names(items), items)
+	html <- paste(unlist(lines[2]), collapse = "<br />\n")
+	show_tooltip(session, page_loc$r + 5, page_loc$t, html)
+}
+tc = unique(active[,c('team','hex_color')]
+color = tc$hex_color
+team = tc$team
+active %>%
+	ggvis(x =~year, y =~valuation,fill=~team) %>%
+	layer_smooths(stroke := "red", fill := 'blue', opacity := .5, se = T,span = .5) %>%
+	layer_points(size.brush := 400, shape=~conference, size := 120,fillOpacity.brush := 1) %>%
+	add_legend("fill",orient = 'right', title = "Team",
+						 properties = legend_props(
+						 	title = list(fontSize = 12),
+						 	labels = list(fontSize = 10, dx = 10),
+						 	symbol = list(stroke = "black", strokeWidth = 1,
+						 								size = 100)
+						 )
+	) %>%
+scale_nominal(property = 'fill',
+							domain = as.character(team),
+							range = as.character(color)) %>%
+	add_legend(c("shape"),orient = 'left', title = "Conference",
+						 properties = legend_props(
+						 	title = list(fontSize = 12),
+						 	labels = list(fontSize = 10, dx = 5),
+						 	symbol = list(stroke = "black", strokeWidth = 2,
+						 								size = 100)
+						 )
+	) %>%
+	add_axis("x", values = seq(from = 1922,to = 2014, by = 6),
+					 title = 'Year',format = '2f'
+					 ) %>%
+	add_axis("y", title = 'Team Sale Price Valuation (million)',format = '$.02f',title_offset = 75) %>%
+	set_options(width = 820, height = 525) %>%
+	add_tooltip(all_values, on = 'click') %>%
+	handle_brush(brushed_summary)
+
+```
