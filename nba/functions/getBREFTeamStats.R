@@ -1,5 +1,5 @@
 getBREFTeamStatTable <- function(season_end = 2015, table_name = 'team', date = T){
-	c('rvest','dplyr','pipeR','RCurl', 'XML') -> packages
+	c('rvest','dplyr','pipeR','RCurl', 'XML','reshape2') -> packages
 	lapply(packages, library, character.only = T)
 	'http://www.basketball-reference.com/leagues/' -> base
 	(season_end-1) %>>% paste0("-",season_end) -> season
@@ -70,15 +70,15 @@ getBREFTeamStatTable <- function(season_end = 2015, table_name = 'team', date = 
 			html %>>%
 			html_nodes(css_page) %>>%
 			html_table(header = F) %>>% data.frame() %>>% tbl_df() -> df
-		if(df$X.1[1] == 'Rk'){
+		if(df$X1[1] == 'Rk'){
 			df %>>%
-				filter(X.1 == "Rk") %>>% as.character -> names
-			'Rk' %>>% grep(x = df$X.1) -> row_of_header #find where rank is
+				filter(X1 == "Rk") %>>% as.character -> names
+			'Rk' %>>% grep(x = df$X1) -> row_of_header #find where rank is
 			(row_of_header + 1) %>>% (df[.:nrow(df),]) -> df #skip that row and go to the end
 			names %>>% tolower-> names(df)} else{
 				df %>>%
-					filter(X.1 == "Rk") %>>% as.character -> names
-				'Rk' %>>% grep(x = df$X.1) -> row_of_header #find where rank is
+					filter(X1 == "Rk") %>>% as.character -> names
+				'Rk' %>>% grep(x = df$X1) -> row_of_header #find where rank is
 				(row_of_header + 1) %>>% (df[.:nrow(df),]) -> df #skip that row and go to the end
 				names %>>% tolower-> names(df)
 			}
